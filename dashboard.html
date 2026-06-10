@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Monitoring Aplikasi</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#111827',
+                        secondary: '#64748b',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Modal Animation */
+        #opdModal {
+            transition: opacity 0.2s ease;
+        }
+
+        #opdModal.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #opdModalBox {
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+        }
+
+        #opdModal.hidden #opdModalBox {
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+        }
+
+        /* Skeleton loader */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f4f8 25%, #e2e8f0 50%, #f0f4f8 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Badge pulse */
+        .badge-aktif::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .card-row {
+            transition: background 0.15s;
+        }
+    </style>
+</head>
+
+<body class="bg-[#f4f7f9] text-slate-800 font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <!-- ==================== MODAL OPD ==================== -->
+    <div id="opdModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);">
+        <div id="opdModalBox"
+            class="bg-white rounded-[24px] shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+
+            <!-- Modal Header -->
+            <div class="p-6 pb-4 border-b border-slate-100 flex items-start justify-between gap-4 shrink-0">
+                <div>
+                    <div class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1.5">LAYANAN OPD
+                        PENGGUNA</div>
+                    <h2 class="text-xl font-black text-[#111827] leading-tight" id="modalAppName">-</h2>
+                    <p class="text-xs text-slate-500 font-semibold mt-1">Daftar OPD yang menggunakan aplikasi ini
+                        sebagai aplikasi pendukung layanan</p>
+                </div>
+                <button onclick="closeModal()"
+                    class="w-9 h-9 shrink-0 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors mt-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Stats Bar -->
+            <div id="modalStatsBar"
+                class="px-6 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-6 shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+                        <i class="fa-solid fa-building text-[#111827] text-xs"></i>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">OPD Pengguna
+                        </div>
+                        <div class="text-sm font-black text-[#111827]" id="modalTotalOPD">-</div>
+                    </div>
+                </div>
+                <div class="w-px h-8 bg-slate-200"></div>
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+                        <i class="fa-solid fa-layer-group text-[#111827] text-xs"></i>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Total Layanan
+                        </div>
+                        <div class="text-sm font-black text-[#111827]" id="modalTotalLayanan">-</div>
+                    </div>
+                </div>
+                <div class="w-px h-8 bg-slate-200"></div>
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+                        <i class="fa-solid fa-users text-[#111827] text-xs"></i>
+                    </div>
+                    <div>
+                        <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">Target Layanan
+                        </div>
+                        <div class="text-sm font-black text-[#111827] truncate max-w-[100px]" id="modalTargetLayanan">-
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="overflow-y-auto flex-1 p-6 space-y-4" id="modalBody">
+                <!-- Content injected by JS -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end shrink-0">
+                <button onclick="closeModal()"
+                    class="bg-[#111827] text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ==================== END MODAL ==================== -->
+
+
+    <!-- Header Section -->
+    <header class="max-w-[1400px] mx-auto mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <div class="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-2">APPLICATIONS &rsaquo;
+                DASHBOARD MONITORING</div>
+            <h1 class="text-4xl md:text-[40px] font-extrabold text-[#111827] tracking-tight mb-2">Monitoring Dashboard
+            </h1>
+            <p class="text-slate-500 font-medium">Visualisasi data master aplikasi desk v3</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="fetchDashboardData()"
+                class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-full text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> Refresh Data
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-[1400px] mx-auto w-full">
+
+        <div id="dashboardContent" class="space-y-6">
+            <!-- Stats Grid: 1 number card + pie status + pie platform -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Card: Total Aplikasi -->
+                <div
+                    class="bg-white rounded-[20px] p-6 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.03)] flex flex-col justify-between min-h-[160px]">
+                    <div class="flex justify-between items-start mb-2">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-[#f0f4f8] text-[#111827] flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-table-cells"></i>
+                        </div>
+                        <span
+                            class="bg-[#f0f4f8] text-slate-500 px-2 py-1 rounded text-[9px] font-extrabold tracking-widest uppercase">TOTAL</span>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-[40px] font-black text-[#111827] leading-none mb-1" id="statTotal">-</h3>
+                        <p class="text-[13px] font-semibold text-slate-500 mt-2">Aplikasi Terdaftar</p>
+                    </div>
+                </div>
+
+                <!-- Card: Pie Chart Status -->
+                <div
+                    class="bg-white rounded-[20px] p-6 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.03)] min-h-[160px] flex flex-col">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1">STATUS
+                                APLIKASI</div>
+                            <p class="text-[13px] font-black text-[#111827]">Aktif vs Tidak Aktif</p>
+                        </div>
+                        <span
+                            class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[9px] font-extrabold tracking-widest uppercase">STATUS</span>
+                    </div>
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="relative shrink-0">
+                            <canvas id="chartStatus" width="90" height="90"></canvas>
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span class="text-[12px] font-black text-[#111827]" id="statAktifPct">-</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                <span class="text-[11px] font-bold text-slate-600">Aktif</span>
+                                <span class="text-[11px] font-black text-[#111827] ml-auto pl-2"
+                                    id="statAktifNum">-</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0"></span>
+                                <span class="text-[11px] font-bold text-slate-600">Tidak Aktif</span>
+                                <span class="text-[11px] font-black text-[#111827] ml-auto pl-2"
+                                    id="statNonAktifNum">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card: Pie Chart Platform (span 2) -->
+                <div
+                    class="bg-white rounded-[20px] p-6 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.03)] min-h-[160px] flex flex-col lg:col-span-2">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1">
+                                DISTRIBUSI PLATFORM</div>
+                            <p class="text-[13px] font-black text-[#111827]">Sebaran Jenis Platform</p>
+                        </div>
+                        <span
+                            class="bg-[#f0f4f8] text-slate-500 px-2 py-1 rounded text-[9px] font-extrabold tracking-widest uppercase">PLATFORM</span>
+                    </div>
+                    <div class="flex items-center gap-6 flex-1">
+                        <div class="relative shrink-0">
+                            <canvas id="chartPlatform" width="110" height="110"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-6 gap-y-2.5 flex-1 min-w-0" id="legendPlatform">
+                            <!-- injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Main Section -->
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+
+                <!-- Left: Table -->
+                <div
+                    class="xl:col-span-3 bg-white rounded-[20px] shadow-[0_4px_20px_-5px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col pb-4">
+                    <div class="p-6 pb-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                        <div>
+                            <h2 class="text-2xl font-black text-[#111827] mb-1">Daftar Monitoring Aplikasi</h2>
+                            <p class="text-[13px] text-slate-500 font-semibold">Data real-time dari seluruh instansi
+                                Kabupaten Bandung</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="relative">
+                                <i
+                                    class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="searchInput" onkeyup="applyFilters()"
+                                    placeholder="Filter nama aplikasi..."
+                                    class="bg-[#f4f7f9] text-[#111827] placeholder-slate-400 text-xs rounded-lg pl-8 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-slate-200 transition-colors w-full sm:w-56 font-bold">
+                            </div>
+                            <select id="platformSelect" onchange="applyFilters()"
+                                class="bg-[#f4f7f9] text-[#111827] text-xs font-bold rounded-lg px-4 py-2.5 focus:outline-none appearance-none pr-8 cursor-pointer">
+                                <option value="">Semua Platform</option>
+                            </select>
+                            <div class="relative">
+                                <select id="opdSelect" onchange="onOPDChange()"
+                                    class="bg-[#f4f7f9] text-[#111827] text-xs font-bold rounded-lg pl-8 pr-4 py-2.5 focus:outline-none appearance-none cursor-pointer w-full sm:w-48 disabled:opacity-50"
+                                    disabled>
+                                    <option value="">Semua OPD</option>
+                                </select>
+                                <i
+                                    class="fa-solid fa-building absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                <div id="opdSelectLoader" class="absolute right-2.5 top-1/2 -translate-y-1/2 hidden">
+                                    <i class="fa-solid fa-circle-notch fa-spin text-slate-400 text-xs"></i>
+                                </div>
+                            </div>
+                            <button
+                                class="bg-emerald-50 text-emerald-700 px-4 py-2.5 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-emerald-100 transition-colors">
+                                <i class="fa-solid fa-download"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto flex-grow px-2">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest border-b border-slate-100">
+                                    <th class="py-4 px-4 w-12 text-center">NO</th>
+                                    <th class="py-4 px-4">NAMA APLIKASI</th>
+                                    <th class="py-4 px-4">PENGEMBANG</th>
+                                    <th class="py-4 px-4">PLATFORM</th>
+                                    <th class="py-4 px-4">STATUS</th>
+                                    <th class="py-4 px-4 text-center">AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="text-sm"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="px-6 pt-4 flex justify-between items-center">
+                        <span class="text-xs font-semibold text-slate-400" id="dataInfo">Menampilkan data...</span>
+                        <div class="flex gap-2">
+                            <button onclick="changePage(-1)" id="btnPrev"
+                                class="w-8 h-8 flex items-center justify-center border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button onclick="changePage(1)" id="btnNext"
+                                class="w-8 h-8 flex items-center justify-center border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Detail Panel -->
+                <div
+                    class="xl:col-span-1 bg-white rounded-[20px] shadow-[0_4px_20px_-5px_rgba(0,0,0,0.03)] p-6 self-start sticky top-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-black text-[#111827]">Detail Informasi</h3>
+                        <i class="fa-solid fa-circle-info text-slate-400"></i>
+                    </div>
+
+                    <div id="detailContentEmpty" class="text-center py-8 text-slate-400 text-sm font-medium">
+                        Pilih aplikasi untuk melihat detail
+                    </div>
+
+                    <div id="detailContent" class="space-y-6 hidden">
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1.5">
+                                TERPILIH</div>
+                            <h4 class="font-extrabold text-[#111827] text-[15px] leading-snug" id="detailNamaLayanan">-
+                            </h4>
+                        </div>
+                        <div class="space-y-5">
+                            <div class="flex gap-4 items-start">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-[#f4f7f9] flex items-center justify-center text-[#111827] shrink-0">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
+                                <div>
+                                    <div
+                                        class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1 mt-1">
+                                        PEMILIK APLIKASI</div>
+                                    <p class="text-[12px] font-bold text-[#111827] leading-relaxed" id="detailPemilik">-
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-[#f4f7f9] flex items-center justify-center text-[#111827] shrink-0">
+                                    <i class="fa-solid fa-link"></i>
+                                </div>
+                                <div>
+                                    <div
+                                        class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1 mt-1">
+                                        URL / ALAMAT</div>
+                                    <a href="#" target="_blank"
+                                        class="text-[12px] font-extrabold text-emerald-600 hover:underline break-all"
+                                        id="detailAlamat">-</a>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-[#f4f7f9] flex items-center justify-center text-[#111827] shrink-0">
+                                    <i class="fa-solid fa-wifi"></i>
+                                </div>
+                                <div>
+                                    <div
+                                        class="text-[9px] font-extrabold text-slate-400 tracking-widest uppercase mb-1 mt-1">
+                                        KATEGORI AKSES</div>
+                                    <p class="text-[12px] font-bold text-[#111827]" id="detailKategoriAkses">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPD Button -->
+                        <button id="btnLihatOPD" onclick="openOPDModal()"
+                            class="w-full mt-2 bg-[#111827] text-white py-3 rounded-xl text-[12px] font-extrabold hover:bg-gray-800 transition-all flex items-center justify-center gap-2 group">
+                            <i class="fa-solid fa-building-columns group-hover:scale-110 transition-transform"></i>
+                            Lihat Layanan OPD
+                            <span id="opdCountBadge"
+                                class="bg-white/20 text-white text-[10px] font-black px-2 py-0.5 rounded-full">...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ======= CONFIG =======
+        const API_URL = 'https://sikapblud.bandungkab.go.id/api/data/master_data_aplikasi_desk_v3';
+        const DETAIL_API_URL = 'https://sikapblud.bandungkab.go.id/api/data/data_detail_layanan_v4';
+
+        // ======= STATE =======
+        const PAGE_SIZE = 20;
+        let currentPage = 1;    // client-side page (dari filteredData)
+        let allData = [];   // SEMUA data master (fetch sekali, limit=9999)
+        let filteredData = [];   // hasil filter search+platform+opd
+        let detailLayananCache = null;
+        let currentSelectedApp = null;
+        // Set nama aplikasi_pendukung yang dipakai oleh OPD terpilih (null = semua)
+        let opdFilterAppNames = null;
+
+        // ======= MOCK DATA (25 records untuk simulasi client-side pagination 20/halaman) =======
+        const mockData = {
+            "page": 1, "limit": 9999, "total": 25, "totalPages": 1,
+            "data": [
+                { "id": 1, "no": "1", "aplikasi_pendukung": "Simaslahat", "pengembang": "Pihak Ke 3", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://simaslahat.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 2, "no": "2", "aplikasi_pendukung": "E-Kinerja", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://ekinerja.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 3, "no": "3", "aplikasi_pendukung": "Sabilulungan Mobile", "pengembang": "Internal", "pemilik": "Pemerintah Daerah", "platform": "Mobile", "alamat_aplikasi": "Playstore", "kategori_akses": "Mobile Apps", "status_aplikasi": "Aktif" },
+                { "id": 4, "no": "4", "aplikasi_pendukung": "SIPETIK", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website dan Mobile", "alamat_aplikasi": "https://dp2kbp3a.bandungkab.go.id/ppa/", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 5, "no": "5", "aplikasi_pendukung": "SIMPATIKA", "pengembang": "Pihak Ke 3", "pemilik": "Kab. Bandung", "platform": "Desktop", "alamat_aplikasi": "https://simpatika.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Tidak Aktif" },
+                { "id": 6, "no": "6", "aplikasi_pendukung": "e-Retribusi", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://retribusi.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Tidak Aktif" },
+                { "id": 7, "no": "7", "aplikasi_pendukung": "SIBISA", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://sibisa.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 8, "no": "8", "aplikasi_pendukung": "SIPD", "pengembang": "Kemendagri", "pemilik": "Kemendagri", "platform": "Website", "alamat_aplikasi": "https://sipd.kemendagri.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 9, "no": "9", "aplikasi_pendukung": "SIMPEG", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://simpeg.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 10, "no": "10", "aplikasi_pendukung": "Bandung Saber Hoaks", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Mobile", "alamat_aplikasi": "Playstore", "kategori_akses": "Mobile Apps", "status_aplikasi": "Aktif" },
+                { "id": 11, "no": "11", "aplikasi_pendukung": "SIRUP", "pengembang": "LKPP", "pemilik": "LKPP", "platform": "Website", "alamat_aplikasi": "https://sirup.lkpp.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 12, "no": "12", "aplikasi_pendukung": "SIAK", "pengembang": "Kemendagri", "pemilik": "Kemendagri", "platform": "Desktop", "alamat_aplikasi": "-", "kategori_akses": "Lokal / Intranet", "status_aplikasi": "Aktif" },
+                { "id": 13, "no": "13", "aplikasi_pendukung": "e-Musrenbang", "pengembang": "Bappeda", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://musrenbang.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 14, "no": "14", "aplikasi_pendukung": "SIPD Pelaporan", "pengembang": "Kemendagri", "pemilik": "Kemendagri", "platform": "Website", "alamat_aplikasi": "https://sipd.kemendagri.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 15, "no": "15", "aplikasi_pendukung": "SILAPER", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website dan Mobile", "alamat_aplikasi": "https://silaper.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Tidak Aktif" },
+                { "id": 16, "no": "16", "aplikasi_pendukung": "e-SKP", "pengembang": "BKN", "pemilik": "BKN", "platform": "Website", "alamat_aplikasi": "https://eskp.bkn.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 17, "no": "17", "aplikasi_pendukung": "SIMDA Keuangan", "pengembang": "BPKP", "pemilik": "BPKP", "platform": "Desktop", "alamat_aplikasi": "-", "kategori_akses": "Lokal / Intranet", "status_aplikasi": "Aktif" },
+                { "id": 18, "no": "18", "aplikasi_pendukung": "SIBANGGA", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://sibangga.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 19, "no": "19", "aplikasi_pendukung": "SAPK", "pengembang": "BKN", "pemilik": "BKN", "platform": "Website", "alamat_aplikasi": "https://sapk.bkn.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 20, "no": "20", "aplikasi_pendukung": "SIMBADA", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://simbada.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 21, "no": "21", "aplikasi_pendukung": "SIPKD", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Desktop", "alamat_aplikasi": "-", "kategori_akses": "Lokal / Intranet", "status_aplikasi": "Tidak Aktif" },
+                { "id": 22, "no": "22", "aplikasi_pendukung": "e-Lapor", "pengembang": "KemenPANRB", "pemilik": "KemenPANRB", "platform": "Website dan Mobile", "alamat_aplikasi": "https://lapor.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 23, "no": "23", "aplikasi_pendukung": "SIDALIH", "pengembang": "KPU", "pemilik": "KPU", "platform": "Website", "alamat_aplikasi": "https://sidalih.kpu.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 24, "no": "24", "aplikasi_pendukung": "SIMPONI", "pengembang": "Kemenkeu", "pemilik": "Kemenkeu", "platform": "Website", "alamat_aplikasi": "https://simponi.kemenkeu.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 25, "no": "25", "aplikasi_pendukung": "OMSPAN", "pengembang": "Kemenkeu", "pemilik": "Kemenkeu", "platform": "Website", "alamat_aplikasi": "https://omspan.kemenkeu.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+            ]
+        };
+
+        const mockDetailData = {
+            "page": 1, "limit": 485, "total": 485, "totalPages": 1,
+            "data": [
+                { "id": 119, "no": "1", "pemilik_layanan": "DP2KBP3A", "nama_layanan": "Layanan Sistem informasi Pelaporan Tindak Kekerasan Perempuan Dan Anak", "tujuan_dan_fungsi_layanan": "Memberikan Layanan Data Korban kekerasan Terhadap Perempuan dan Anak", "dasar_hukum_layanan": "Undang-Undang Nomor 23 Tahun 2004", "referensi_layanan": "PENINGKATAN KUALITAS PELAYANAN PUBLIK", "target_layanan": "Masyarakat", "data_yang_dimasukan": "Data Korban, Progres Pendampingan", "data_yang_dihasilkan": "Progres Pendampingan", "sifat_data": "Rahasia", "data_pribadi": "Terdapat", "interval_update_data_yang_dihasilkan": "Harian", "aplikasi_pendukung": "SIPETIK", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://dp2kbp3a.bandungkab.go.id/ppa/", "kategori_akses": "Secara Online", "jenis_aplikasi": "Transaksi", "tahun_pembuatan": "2023", "status_aplikasi": "Aktif", "bidang___unit_kerja": "Bidang Pemberdayaan Perempuan", "opd": "DP2KBP3A", "nama": "Deti Rosdiani", "no__hp": "085722205379", "frekuensi_penggunaan_aplikasi": "Harian" },
+                { "id": 120, "no": "2", "pemilik_layanan": "DINAS PENDIDIKAN", "nama_layanan": "Layanan Data Guru dan Tenaga Kependidikan", "tujuan_dan_fungsi_layanan": "Pengelolaan data guru", "dasar_hukum_layanan": "UU No. 14 Tahun 2005", "referensi_layanan": "PENINGKATAN SDM", "target_layanan": "Guru", "data_yang_dimasukan": "Data Kepegawaian", "data_yang_dihasilkan": "Laporan Kinerja", "sifat_data": "Terbatas", "data_pribadi": "Terdapat", "interval_update_data_yang_dihasilkan": "Bulanan", "aplikasi_pendukung": "SIPETIK", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://disdik.bandungkab.go.id", "kategori_akses": "Secara Online", "jenis_aplikasi": "Informasi", "tahun_pembuatan": "2022", "status_aplikasi": "Aktif", "bidang___unit_kerja": "Bidang GTK", "opd": "DINAS PENDIDIKAN", "nama": "Ahmad Saeful", "no__hp": "081234567890", "frekuensi_penggunaan_aplikasi": "Mingguan" },
+                { "id": 121, "no": "3", "pemilik_layanan": "BKPSDM", "nama_layanan": "Layanan Kinerja ASN", "tujuan_dan_fungsi_layanan": "Monitoring kinerja ASN", "dasar_hukum_layanan": "PP No. 30 Tahun 2019", "referensi_layanan": "REFORMASI BIROKRASI", "target_layanan": "ASN", "data_yang_dimasukan": "SKP, Penilaian", "data_yang_dihasilkan": "Laporan Kinerja", "sifat_data": "Terbatas", "data_pribadi": "Terdapat", "interval_update_data_yang_dihasilkan": "Tahunan", "aplikasi_pendukung": "E-Kinerja", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://ekinerja.bandungkab.go.id", "kategori_akses": "Secara Online", "jenis_aplikasi": "Transaksi", "tahun_pembuatan": "2021", "status_aplikasi": "Aktif", "bidang___unit_kerja": "Bidang Pengembangan Kompetensi", "opd": "BKPSDM", "nama": "Rini Kartika", "no__hp": "087654321098", "frekuensi_penggunaan_aplikasi": "Harian" },
+            ]
+        };
+
+        // ======= INIT =======
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDashboardData();
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('opdModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ======= FETCH MAIN DATA (semua sekaligus, client-side pagination) =======
+        async function fetchDashboardData() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+            // Reset OPD filter state saat refresh
+            opdFilterAppNames = null;
+            const opdSel = document.getElementById('opdSelect');
+            if (opdSel) { opdSel.value = ''; opdSel.disabled = true; }
+
+            try {
+                const response = await fetch(`${API_URL}?page=1&limit=9999`);
+                if (!response.ok) throw new Error('Fetch failed');
+                const data = await response.json();
+                allData = data.data || [];
+                currentPage = 1;
+                populatePlatformDropdown();
+                updateStatistics(allData);
+                applyFilters();
+            } catch (error) {
+                console.warn("Fallback ke mock data:", error);
+                setTimeout(() => {
+                    allData = mockData.data || [];
+                    currentPage = 1;
+                    populatePlatformDropdown();
+                    updateStatistics(allData);
+                    applyFilters();
+                }, 600);
+            } finally {
+                setTimeout(() => { if (refreshIcon) refreshIcon.classList.remove('fa-spin'); }, 500);
+            }
+
+            // Populate OPD dropdown secara non-blocking (pakai cache detailLayanan)
+            populateOPDDropdown();
+        }
+
+        // ======= POPULATE OPD DROPDOWN =======
+        async function populateOPDDropdown() {
+            const sel = document.getElementById('opdSelect');
+            const loader = document.getElementById('opdSelectLoader');
+            if (!sel) return;
+
+            if (loader) loader.classList.remove('hidden');
+            sel.disabled = true;
+
+            const detailData = await fetchDetailLayanan();
+
+            // Ambil unique pemilik_layanan, sort A-Z
+            const opdList = [...new Set(
+                detailData
+                    .map(d => (d.pemilik_layanan || '').trim())
+                    .filter(Boolean)
+            )].sort((a, b) => a.localeCompare(b, 'id'));
+
+            // Rebuild options
+            sel.innerHTML = '<option value="">Semua OPD</option>';
+            opdList.forEach(opd => {
+                const opt = document.createElement('option');
+                opt.value = opd;
+                opt.textContent = opd;
+                sel.appendChild(opt);
+            });
+
+            sel.disabled = false;
+            if (loader) loader.classList.add('hidden');
+        }
+
+        // ======= FETCH DETAIL LAYANAN (cached) =======
+        async function fetchDetailLayanan() {
+            if (detailLayananCache) return detailLayananCache;
+
+            try {
+                const response = await fetch(`${DETAIL_API_URL}?page=1&limit=9999`);
+                if (!response.ok) throw new Error('Fetch detail failed');
+                const data = await response.json();
+                detailLayananCache = data.data || [];
+                return detailLayananCache;
+            } catch (error) {
+                console.warn("Fallback ke mock detail data:", error);
+                detailLayananCache = mockDetailData.data;
+                return detailLayananCache;
+            }
+        }
+
+
+
+        // ======= POPULATE PLATFORM DROPDOWN (dari allData, sync dengan pie chart) =======
+        function populatePlatformDropdown() {
+            const sel = document.getElementById('platformSelect');
+            if (!sel) return;
+
+            // Ambil unique normalized platform dari allData, pakai label dari PLATFORM_COLORS
+            const seen = new Set();
+            const platforms = [];
+            allData.forEach(d => {
+                const key = normalizePlatform(d.platform);
+                if (key !== 'other' && !seen.has(key)) {
+                    seen.add(key);
+                    platforms.push({ key, label: PLATFORM_COLORS[key]?.label || key });
+                }
+            });
+            // Sort by label A-Z
+            platforms.sort((a, b) => a.label.localeCompare(b.label, 'id'));
+
+            sel.innerHTML = '<option value="">Semua Platform</option>';
+            platforms.forEach(({ key, label }) => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = label;
+                sel.appendChild(opt);
+            });
+        }
+
+        // ======= OPD CHANGE HANDLER (async-safe) =======
+        async function onOPDChange() {
+            // Pastikan cache sudah terload sebelum filter
+            if (!detailLayananCache) {
+                await fetchDetailLayanan();
+            }
+            applyFilters();
+        }
+
+        // ======= FILTER (dari allData, client-side pagination) =======
+        function applyFilters() {
+            const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+            const platformTerm = (document.getElementById('platformSelect')?.value || '').trim();
+            const opdTerm = (document.getElementById('opdSelect')?.value || '').trim();
+
+            // Saat OPD dipilih: resolve set nama aplikasi milik OPD tsb dari detail cache
+            if (opdTerm && detailLayananCache) {
+                const opdNeedle = opdTerm.toLowerCase();
+                const appNamesForOPD = new Set(
+                    detailLayananCache
+                        .filter(d => (d.pemilik_layanan || '').toLowerCase().trim() === opdNeedle)
+                        .map(d => (d.aplikasi_pendukung || '').trim())  // jaga casing asli
+                        .filter(v => v.length > 0)                       // buang null / kosong
+                );
+                opdFilterAppNames = appNamesForOPD;
+            } else {
+                opdFilterAppNames = null;
+            }
+
+            filteredData = allData.filter(item => {
+                const masterApp = (item.aplikasi_pendukung || '').trim();
+                const appLower = masterApp.toLowerCase();
+
+                // Buang record master yang aplikasi_pendukung-nya kosong/null
+                // saat OPD filter aktif — tidak ada yang bisa di-match
+                if (opdFilterAppNames !== null && masterApp.length === 0) return false;
+
+                const matchesSearch = appLower.includes(searchTerm);
+
+                // Platform: cocokkan dengan normalizePlatform (sama dengan pie chart)
+                const matchesPlatform = !platformTerm
+                    || normalizePlatform(item.platform) === platformTerm;
+
+                // OPD filter: strict contain — haystack (detail) harus contains needle (master)
+                // Keduanya harus non-empty agar tidak false-positive
+                let matchesOPD = true;
+                if (opdFilterAppNames !== null) {
+                    matchesOPD = masterApp.length > 0 && [...opdFilterAppNames].some(haystack => {
+                        const h = haystack.toLowerCase();
+                        return h.length > 0 && h.includes(appLower);
+                    });
+                }
+
+                return matchesSearch && matchesPlatform && matchesOPD;
+            });
+
+            currentPage = 1;
+            renderPagedTable();
+        }
+
+        // ======= RENDER HALAMAN AKTIF =======
+        function renderPagedTable() {
+            const totalPages = Math.ceil(filteredData.length / PAGE_SIZE) || 1;
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageData = filteredData.slice(start, start + PAGE_SIZE);
+
+            // Info text
+            const infoEl = document.getElementById('dataInfo');
+            if (infoEl) {
+                if (filteredData.length === allData.length) {
+                    infoEl.innerText = `Menampilkan ${start + 1}–${Math.min(start + PAGE_SIZE, filteredData.length)} dari ${allData.length} data`;
+                } else {
+                    infoEl.innerText = `${filteredData.length} hasil ditemukan · halaman ${currentPage}/${totalPages}`;
+                }
+            }
+
+            // Pagination buttons
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            if (btnPrev) btnPrev.disabled = currentPage <= 1;
+            if (btnNext) btnNext.disabled = currentPage >= totalPages;
+
+            renderTable(pageData, start);
+
+            // Auto-select first on page
+            if (pageData.length > 0) {
+                openDetail(pageData[0].id);
+            } else {
+                document.getElementById('detailContent').classList.add('hidden');
+                document.getElementById('detailContentEmpty').classList.remove('hidden');
+                currentSelectedApp = null;
+            }
+        }
+
+        // ======= RENDER TABLE =======
+        function renderTable(data, offset = 0) {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500 font-bold">Tidak ada data ditemukan.</td></tr>`;
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const status = (item.status_aplikasi || '').toLowerCase();
+                let statusBadge = status.includes('aktif') && !status.includes('tidak')
+                    ? `<span class="badge-aktif text-[10px] font-black text-emerald-600 tracking-widest uppercase">AKTIF</span>`
+                    : `<span class="text-[10px] font-black text-amber-500 tracking-widest uppercase">${item.status_aplikasi || 'UNKNOWN'}</span>`;
+
+                const plat = (item.platform || '').toLowerCase();
+                let platformIcon = '<i class="fa-solid fa-globe text-[#111827]"></i>';
+                if (plat.includes('mobile') || plat.includes('android')) platformIcon = '<i class="fa-brands fa-android text-[#111827]"></i>';
+                if (plat.includes('desktop')) platformIcon = '<i class="fa-solid fa-desktop text-[#111827]"></i>';
+
+                // Nomor urut global (1-based dari posisi di filteredData)
+                const rowNum = String(item.no || (offset + index + 1)).padStart(2, '0');
+                const appName = item.aplikasi_pendukung || '-';
+                const truncatedName = appName.length > 50 ? appName.substring(0, 50) + '...' : appName;
+
+                const tr = document.createElement('tr');
+                tr.className = 'card-row hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-none';
+                tr.innerHTML = `
+                    <td class="py-4 px-4 text-slate-400 font-bold text-xs text-center">${rowNum}</td>
+                    <td class="py-4 px-4">
+                        <p class="font-extrabold text-[#111827] text-[13px] max-w-sm leading-snug">${truncatedName}</p>
+                    </td>
+                    <td class="py-4 px-4"><span class="text-slate-600 font-bold text-xs">${item.pengembang || '-'}</span></td>
+                    <td class="py-4 px-4">
+                        <div class="flex items-center gap-2">${platformIcon}<span class="text-[#111827] font-extrabold text-xs">${item.platform || 'Website'}</span></div>
+                    </td>
+                    <td class="py-4 px-4">${statusBadge}</td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="openDetail(${item.id})" class="bg-[#111827] text-white hover:bg-gray-800 px-5 py-2 rounded-lg text-[11px] font-bold transition-all shadow-sm">Detail</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ======= STATS =======
+        let chartStatusInst = null;
+        let chartPlatformInst = null;
+
+        const PLATFORM_COLORS = {
+            'website': { bg: '#111827', label: 'Website' },
+            'mobile': { bg: '#10b981', label: 'Mobile' },
+            'desktop': { bg: '#6366f1', label: 'Desktop' },
+            'website dan mobile': { bg: '#f59e0b', label: 'Website & Mobile' },
+            'android': { bg: '#10b981', label: 'Mobile/Android' },
+            'other': { bg: '#cbd5e1', label: 'Lainnya' },
+        };
+
+        function normalizePlatform(raw) {
+            const p = (raw || '').toLowerCase().trim();
+            if (p === 'website dan mobile' || p === 'website & mobile') return 'website dan mobile';
+            if (p === 'website' || p === 'web') return 'website';
+            if (p === 'mobile' || p === 'android') return 'mobile';
+            if (p === 'desktop') return 'desktop';
+            return 'other';
+        }
+
+        function updateStatistics(data) {
+            // Total (dari allData)
+            const elTotal = document.getElementById('statTotal');
+            if (elTotal) elTotal.innerText = data.length;
+
+            // Status: exact match "Aktif" (case-insensitive, trim)
+            const aktifCount = data.filter(d => (d.status_aplikasi || '').trim().toLowerCase() === 'aktif').length;
+            const nonAktifCount = data.length - aktifCount;
+            const aktifPct = data.length > 0 ? Math.round((aktifCount / data.length) * 100) : 0;
+
+            const elAktifNum = document.getElementById('statAktifNum');
+            const elNonAktifNum = document.getElementById('statNonAktifNum');
+            const elAktifPct = document.getElementById('statAktifPct');
+            if (elAktifNum) elAktifNum.innerText = aktifCount;
+            if (elNonAktifNum) elNonAktifNum.innerText = nonAktifCount;
+            if (elAktifPct) elAktifPct.innerText = aktifPct + '%';
+
+            // Pie: Status
+            const ctxStatus = document.getElementById('chartStatus');
+            if (ctxStatus) {
+                if (chartStatusInst) chartStatusInst.destroy();
+                chartStatusInst = new Chart(ctxStatus, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Aktif', 'Tidak Aktif'],
+                        datasets: [{
+                            data: [aktifCount, nonAktifCount],
+                            backgroundColor: ['#10b981', '#e2e8f0'],
+                            borderWidth: 0,
+                            hoverOffset: 4,
+                        }]
+                    },
+                    options: {
+                        cutout: '72%',
+                        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                        animation: { animateRotate: true, duration: 700 },
+                    }
+                });
+            }
+
+            // Platform counts
+            const platformCounts = {};
+            data.forEach(d => {
+                const key = normalizePlatform(d.platform);
+                platformCounts[key] = (platformCounts[key] || 0) + 1;
+            });
+
+            // Sort by count desc, filter zeros
+            const platformEntries = Object.entries(platformCounts)
+                .filter(([, v]) => v > 0)
+                .sort((a, b) => b[1] - a[1]);
+
+            const platLabels = platformEntries.map(([k]) => PLATFORM_COLORS[k]?.label || k);
+            const platValues = platformEntries.map(([, v]) => v);
+            const platColors = platformEntries.map(([k]) => PLATFORM_COLORS[k]?.bg || '#cbd5e1');
+
+            // Pie: Platform
+            const ctxPlat = document.getElementById('chartPlatform');
+            if (ctxPlat) {
+                if (chartPlatformInst) chartPlatformInst.destroy();
+                chartPlatformInst = new Chart(ctxPlat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: platLabels,
+                        datasets: [{
+                            data: platValues,
+                            backgroundColor: platColors,
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 6,
+                        }]
+                    },
+                    options: {
+                        cutout: '65%',
+                        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+                        animation: { animateRotate: true, duration: 700 },
+                    }
+                });
+            }
+
+            // Legend Platform
+            const legendEl = document.getElementById('legendPlatform');
+            if (legendEl) {
+                legendEl.innerHTML = platformEntries.map(([k, v]) => {
+                    const cfg = PLATFORM_COLORS[k] || { bg: '#cbd5e1', label: k };
+                    const pct = data.length > 0 ? Math.round((v / data.length) * 100) : 0;
+                    return `
+                        <div class="flex items-center gap-2 min-w-0">
+                            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${cfg.bg}"></span>
+                            <span class="text-[11px] font-bold text-slate-600 truncate">${cfg.label}</span>
+                            <span class="text-[11px] font-black text-[#111827] ml-auto pl-1">${v} <span class="text-slate-400 font-semibold">(${pct}%)</span></span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // ======= SIDE PANEL DETAIL =======
+        function openDetail(id) {
+            const app = allData.find(d => d.id === id);
+            if (!app) return;
+
+            currentSelectedApp = app;
+
+            document.getElementById('detailContentEmpty').classList.add('hidden');
+            document.getElementById('detailContent').classList.remove('hidden');
+            document.getElementById('detailNamaLayanan').innerText = app.aplikasi_pendukung || '-';
+            document.getElementById('detailPemilik').innerText = app.pemilik || 'Pemerintah Kabupaten Bandung';
+
+            const alamatLink = document.getElementById('detailAlamat');
+            if (app.alamat_aplikasi && app.alamat_aplikasi.trim() !== '-' && app.alamat_aplikasi.trim() !== '') {
+                let url = app.alamat_aplikasi.trim();
+                if (!url.startsWith('http') && !url.toLowerCase().includes('playstore')) url = 'https://' + url;
+                alamatLink.href = url;
+                alamatLink.innerText = app.alamat_aplikasi;
+                alamatLink.classList.remove('text-slate-400', 'pointer-events-none');
+                alamatLink.classList.add('text-emerald-600', 'hover:underline');
+            } else {
+                alamatLink.removeAttribute('href');
+                alamatLink.innerText = 'Tidak ada URL';
+                alamatLink.classList.remove('text-emerald-600', 'hover:underline');
+                alamatLink.classList.add('text-slate-400', 'pointer-events-none');
+            }
+
+            document.getElementById('detailKategoriAkses').innerText = app.kategori_akses || 'Secara Online';
+
+            // Update OPD badge count (async, non-blocking)
+            updateOPDBadge(app.aplikasi_pendukung);
+        }
+
+        // ======= MATCHING HELPER =======
+        // Logika: cari record di data_detail_layanan yang field aplikasi_pendukung-nya
+        // CONTAINS nama aplikasi dari master v3 (bukan exact match).
+        // Contoh: master = "SIPETIK", detail bisa punya "SIPETIK, E-Form" → tetap match.
+        // needle  = master.aplikasi_pendukung  (nama singkat dari v3)
+        // haystack = detail.aplikasi_pendukung (bisa berisi nama panjang / gabungan)
+        // Contoh: master="SIPETIK", detail="Sistem SIPETIK Bandung" → match ✓
+        function matchByContains(detailData, masterAppName) {
+            const needle = (masterAppName || '').toLowerCase().trim();
+            if (!needle) return [];
+            return detailData.filter(d => {
+                const haystack = (d.aplikasi_pendukung || '').toLowerCase().trim();
+                return haystack.includes(needle);
+            });
+        }
+
+        // ======= UPDATE OPD COUNT BADGE =======
+        async function updateOPDBadge(appName) {
+            const badge = document.getElementById('opdCountBadge');
+            if (badge) badge.innerText = '...';
+
+            const allData = await fetchDetailLayanan();
+            const matched = matchByContains(allData, appName);
+
+            if (badge) badge.innerText = matched.length;
+        }
+
+        // ======= OPEN OPD MODAL =======
+        async function openOPDModal() {
+            if (!currentSelectedApp) return;
+
+            const modal = document.getElementById('opdModal');
+            const modalBox = document.getElementById('opdModalBox');
+            const modalBody = document.getElementById('modalBody');
+            const appName = currentSelectedApp.aplikasi_pendukung;
+
+            // Set title
+            document.getElementById('modalAppName').innerText = appName;
+
+            // Show skeleton loading
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.style.opacity = '1';
+                modalBox.style.transform = 'scale(1) translateY(0)';
+                modalBox.style.opacity = '1';
+            });
+
+            // Skeleton placeholders
+            modalBody.innerHTML = `
+                <div class="space-y-3">
+                    ${[1, 2, 3].map(() => `
+                        <div class="border border-slate-100 rounded-2xl p-5 space-y-3">
+                            <div class="skeleton h-4 w-1/3"></div>
+                            <div class="skeleton h-3 w-2/3"></div>
+                            <div class="skeleton h-3 w-full"></div>
+                            <div class="skeleton h-3 w-1/2"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // Reset stats
+            document.getElementById('modalTotalOPD').innerText = '...';
+            document.getElementById('modalTotalLayanan').innerText = '...';
+            document.getElementById('modalTargetLayanan').innerText = '...';
+
+            // Fetch & filter
+            const allData = await fetchDetailLayanan();
+            const matched = matchByContains(allData, appName);
+
+            // Compute stats
+            const uniqueOPDs = [...new Set(matched.map(d => d.opd || d.pemilik_layanan).filter(Boolean))];
+            const targets = [...new Set(matched.map(d => d.target_layanan).filter(Boolean))];
+
+            document.getElementById('modalTotalOPD').innerText = uniqueOPDs.length;
+            document.getElementById('modalTotalLayanan').innerText = matched.length;
+            document.getElementById('modalTargetLayanan').innerText = targets.slice(0, 2).join(', ') || '-';
+
+            // Render cards
+            if (matched.length === 0) {
+                modalBody.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-2xl"></i>
+                        </div>
+                        <p class="font-extrabold text-slate-500 text-sm">Tidak ada layanan ditemukan</p>
+                        <p class="text-slate-400 text-xs mt-1">Belum ada OPD yang terdaftar menggunakan aplikasi <strong>${appName}</strong></p>
+                    </div>
+                `;
+                return;
+            }
+
+            modalBody.innerHTML = matched.map((item, i) => {
+                const statusColor = (item.status_aplikasi || '').toLowerCase().includes('aktif') && !(item.status_aplikasi || '').toLowerCase().includes('tidak')
+                    ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50';
+                const sifatColor = (item.sifat_data || '').toLowerCase().includes('rahasia')
+                    ? 'text-red-600 bg-red-50' : 'text-blue-600 bg-blue-50';
+                const datapribadiColor = (item.data_pribadi || '').toLowerCase().includes('terdapat')
+                    ? 'text-orange-600 bg-orange-50' : 'text-slate-500 bg-slate-100';
+
+                return `
+                <div class="border border-slate-100 hover:border-slate-200 rounded-2xl p-5 transition-all hover:shadow-sm">
+                    <!-- Header OPD Card -->
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div class="flex items-start gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-[#111827] text-white flex items-center justify-center text-sm font-black shrink-0">
+                                ${String(i + 1).padStart(2, '0')}
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-0.5">OPD</div>
+                                <p class="font-extrabold text-[#111827] text-[13px] leading-snug">${item.pemilik_layanan || '-'}</p>
+
+                            </div>
+                        </div>
+                        <div class="flex gap-1.5 shrink-0 flex-wrap justify-end">
+                            <span class="text-[9px] font-extrabold px-2 py-1 rounded-lg uppercase tracking-widest ${statusColor}">${item.status_aplikasi || 'UNKNOWN'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Nama Layanan -->
+                    <div class="mb-4 p-3 bg-slate-50 rounded-xl">
+                        <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">NAMA LAYANAN</div>
+                        <p class="text-[12px] font-bold text-[#111827] leading-relaxed">${item.nama_layanan || '-'}</p>
+                    </div>
+
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">BIDANG / UNIT KERJA</div>
+                            <p class="text-[11px] font-bold text-slate-700">${item.bidang___unit_kerja || '-'}</p>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">TARGET LAYANAN</div>
+                            <p class="text-[11px] font-bold text-slate-700">${item.target_layanan || '-'}</p>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">FREKUENSI UPDATE</div>
+                            <p class="text-[11px] font-bold text-slate-700">${item.interval_update_data_yang_dihasilkan || '-'}</p>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">FREKUENSI PENGGUNAAN</div>
+                            <p class="text-[11px] font-bold text-slate-700">${item.frekuensi_penggunaan_aplikasi || '-'}</p>
+                        </div>
+                    </div>
+
+                    <!-- Badges row -->
+                    <div class="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                        <span class="text-[9px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-widest ${sifatColor}">
+                            <i class="fa-solid fa-shield mr-1"></i>${item.sifat_data || 'Umum'}
+                        </span>
+                        <span class="text-[9px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-widest ${datapribadiColor}">
+                            <i class="fa-solid fa-id-card mr-1"></i>Data Pribadi: ${item.data_pribadi || '-'}
+                        </span>
+                        ${item.tahun_pembuatan ? `<span class="text-[9px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-widest text-slate-500 bg-slate-100"><i class="fa-solid fa-calendar mr-1"></i>${item.tahun_pembuatan}</span>` : ''}
+                    </div>
+
+                    <!-- Contact Row (PIC) -->
+                    ${item.nama || item.no__hp ? `
+                    <div class="flex items-center gap-3 pt-3 mt-3 border-t border-slate-100">
+                        <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                            <i class="fa-solid fa-user text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">PIC</div>
+                            <p class="text-[11px] font-bold text-slate-700">${item.nama || '-'}${item.no__hp ? ` &bull; ${item.no__hp}` : ''}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `}).join('');
+        }
+
+        // ======= CLOSE MODAL =======
+        function closeModal() {
+            const modal = document.getElementById('opdModal');
+            const modalBox = document.getElementById('opdModalBox');
+            modal.style.opacity = '0';
+            modalBox.style.transform = 'scale(0.95) translateY(10px)';
+            modalBox.style.opacity = '0';
+            setTimeout(() => modal.classList.add('hidden'), 220);
+        }
+
+        // ESC to close
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ======= PAGINATION (client-side) =======
+        function changePage(step) {
+            const totalPages = Math.ceil(filteredData.length / PAGE_SIZE) || 1;
+            const newPage = currentPage + step;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderPagedTable();
+            }
+        }
+    </script>
+</body>
+
+</html>
