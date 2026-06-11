@@ -198,7 +198,7 @@
                 DASHBOARD MONITORING</div>
             <h1 class="text-4xl md:text-[40px] font-extrabold text-[#111827] tracking-tight mb-2">Monitoring Dashboard
             </h1>
-            <p class="text-slate-500 font-medium">Visualisasi data master aplikasi desk v3</p>
+            <p class="text-slate-500 font-medium">Visualisasi data master aplikasi desk v5</p>
         </div>
         <div class="flex items-center gap-3">
             <button onclick="fetchDashboardData()"
@@ -444,7 +444,7 @@
 
     <script>
         // ======= CONFIG =======
-        const API_URL = 'https://sikapblud.bandungkab.go.id/api/data/master_data_aplikasi_desk_v3';
+        const API_URL = 'https://sikapblud.bandungkab.go.id/api/data/master_data_aplikasi_desk_v5';
         const DETAIL_API_URL = 'https://sikapblud.bandungkab.go.id/api/data/data_detail_layanan_v4';
 
         // ======= STATE =======
@@ -457,35 +457,20 @@
         // Set nama aplikasi_pendukung yang dipakai oleh OPD terpilih (null = semua)
         let opdFilterAppNames = null;
 
-        // ======= MOCK DATA (25 records untuk simulasi client-side pagination 20/halaman) =======
+        // ======= MOCK DATA v5 (field: aplikasi, status, pemilik, pengembang — sengaja null untuk simulasi enrich dari layanan) =======
         const mockData = {
-            "page": 1, "limit": 9999, "total": 25, "totalPages": 1,
+            "page": 1, "limit": 9999, "total": 10, "totalPages": 1,
             "data": [
-                { "id": 1, "no": "1", "aplikasi_pendukung": "Simaslahat", "pengembang": "Pihak Ke 3", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://simaslahat.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 2, "no": "2", "aplikasi_pendukung": "E-Kinerja", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://ekinerja.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 3, "no": "3", "aplikasi_pendukung": "Sabilulungan Mobile", "pengembang": "Internal", "pemilik": "Pemerintah Daerah", "platform": "Mobile", "alamat_aplikasi": "Playstore", "kategori_akses": "Mobile Apps", "status_aplikasi": "Aktif" },
-                { "id": 4, "no": "4", "aplikasi_pendukung": "SIPETIK", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website dan Mobile", "alamat_aplikasi": "https://dp2kbp3a.bandungkab.go.id/ppa/", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 5, "no": "5", "aplikasi_pendukung": "SIMPATIKA", "pengembang": "Pihak Ke 3", "pemilik": "Kab. Bandung", "platform": "Desktop", "alamat_aplikasi": "https://simpatika.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Tidak Aktif" },
-                { "id": 6, "no": "6", "aplikasi_pendukung": "e-Retribusi", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://retribusi.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Tidak Aktif" },
-                { "id": 7, "no": "7", "aplikasi_pendukung": "SIBISA", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://sibisa.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 8, "no": "8", "aplikasi_pendukung": "SIPD", "pengembang": "Kemendagri", "pemilik": "Kemendagri", "platform": "Website", "alamat_aplikasi": "https://sipd.kemendagri.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 9, "no": "9", "aplikasi_pendukung": "SIMPEG", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://simpeg.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 10, "no": "10", "aplikasi_pendukung": "Bandung Saber Hoaks", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Mobile", "alamat_aplikasi": "Playstore", "kategori_akses": "Mobile Apps", "status_aplikasi": "Aktif" },
-                { "id": 11, "no": "11", "aplikasi_pendukung": "SIRUP", "pengembang": "LKPP", "pemilik": "LKPP", "platform": "Website", "alamat_aplikasi": "https://sirup.lkpp.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 12, "no": "12", "aplikasi_pendukung": "SIAK", "pengembang": "Kemendagri", "pemilik": "Kemendagri", "platform": "Desktop", "alamat_aplikasi": "-", "kategori_akses": "Lokal / Intranet", "status_aplikasi": "Aktif" },
-                { "id": 13, "no": "13", "aplikasi_pendukung": "e-Musrenbang", "pengembang": "Bappeda", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://musrenbang.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 14, "no": "14", "aplikasi_pendukung": "SIPD Pelaporan", "pengembang": "Kemendagri", "pemilik": "Kemendagri", "platform": "Website", "alamat_aplikasi": "https://sipd.kemendagri.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 15, "no": "15", "aplikasi_pendukung": "SILAPER", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website dan Mobile", "alamat_aplikasi": "https://silaper.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Tidak Aktif" },
-                { "id": 16, "no": "16", "aplikasi_pendukung": "e-SKP", "pengembang": "BKN", "pemilik": "BKN", "platform": "Website", "alamat_aplikasi": "https://eskp.bkn.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 17, "no": "17", "aplikasi_pendukung": "SIMDA Keuangan", "pengembang": "BPKP", "pemilik": "BPKP", "platform": "Desktop", "alamat_aplikasi": "-", "kategori_akses": "Lokal / Intranet", "status_aplikasi": "Aktif" },
-                { "id": 18, "no": "18", "aplikasi_pendukung": "SIBANGGA", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://sibangga.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 19, "no": "19", "aplikasi_pendukung": "SAPK", "pengembang": "BKN", "pemilik": "BKN", "platform": "Website", "alamat_aplikasi": "https://sapk.bkn.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 20, "no": "20", "aplikasi_pendukung": "SIMBADA", "pengembang": "Diskominfo", "pemilik": "Kab. Bandung", "platform": "Website", "alamat_aplikasi": "https://simbada.bandungkab.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 21, "no": "21", "aplikasi_pendukung": "SIPKD", "pengembang": "Internal", "pemilik": "Kab. Bandung", "platform": "Desktop", "alamat_aplikasi": "-", "kategori_akses": "Lokal / Intranet", "status_aplikasi": "Tidak Aktif" },
-                { "id": 22, "no": "22", "aplikasi_pendukung": "e-Lapor", "pengembang": "KemenPANRB", "pemilik": "KemenPANRB", "platform": "Website dan Mobile", "alamat_aplikasi": "https://lapor.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 23, "no": "23", "aplikasi_pendukung": "SIDALIH", "pengembang": "KPU", "pemilik": "KPU", "platform": "Website", "alamat_aplikasi": "https://sidalih.kpu.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 24, "no": "24", "aplikasi_pendukung": "SIMPONI", "pengembang": "Kemenkeu", "pemilik": "Kemenkeu", "platform": "Website", "alamat_aplikasi": "https://simponi.kemenkeu.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
-                { "id": 25, "no": "25", "aplikasi_pendukung": "OMSPAN", "pengembang": "Kemenkeu", "pemilik": "Kemenkeu", "platform": "Website", "alamat_aplikasi": "https://omspan.kemenkeu.go.id", "kategori_akses": "Secara Online", "status_aplikasi": "Aktif" },
+                { "id": 1, "no": "1", "aplikasi": "KANDAGA", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 2, "no": "2", "aplikasi": "SIPETIK", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 3, "no": "3", "aplikasi": "E-Kinerja", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 4, "no": "4", "aplikasi": "SIMASDA", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 5, "no": "5", "aplikasi": "SIAK", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 6, "no": "6", "aplikasi": "SIMPEG", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 7, "no": "7", "aplikasi": "SIBISA", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 8, "no": "8", "aplikasi": "SIPD", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 9, "no": "9", "aplikasi": "e-Lapor", "status": null, "pemilik": null, "pengembang": null },
+                { "id": 10, "no": "10", "aplikasi": "SIMDA Keuangan", "status": null, "pemilik": null, "pengembang": null },
             ]
         };
 
@@ -508,6 +493,36 @@
             if (e.target === this) closeModal();
         });
 
+        // ======= NORMALIZE v5 FIELD NAMES =======
+        // v5 memakai "aplikasi" dan "status", sedangkan kode pakai "aplikasi_pendukung" dan "status_aplikasi"
+        function normalizeV5Item(item) {
+            if (!item.aplikasi_pendukung) item.aplikasi_pendukung = item.aplikasi || '';
+            if (!item.status_aplikasi)   item.status_aplikasi   = item.status   || null;
+        }
+
+        // ======= ENRICH allData DARI LAYANAN =======
+        // Untuk setiap aplikasi master, cari semua layanan yang memakai aplikasi tsb,
+        // ambil yang paling lengkap (paling banyak field non-null) sebagai sumber data.
+        const ENRICH_FIELDS = ['pengembang', 'pemilik', 'platform', 'alamat_aplikasi', 'kategori_akses', 'status_aplikasi', 'jenis_aplikasi', 'tahun_pembuatan'];
+
+        function enrichAllData() {
+            if (!detailLayananCache) return;
+            allData.forEach(item => {
+                const matched = matchByContains(detailLayananCache, item.aplikasi_pendukung);
+                if (matched.length === 0) return;
+                // Pilih record layanan paling lengkap
+                const best = matched.reduce((bestItem, cur) => {
+                    const scoreB = ENRICH_FIELDS.filter(f => bestItem[f] != null && bestItem[f] !== '').length;
+                    const scoreC = ENRICH_FIELDS.filter(f => cur[f]      != null && cur[f]      !== '').length;
+                    return scoreC > scoreB ? cur : bestItem;
+                });
+                // Isi field yang kosong di master dengan data dari layanan terbaik
+                ENRICH_FIELDS.forEach(f => {
+                    if (!item[f] && best[f]) item[f] = best[f];
+                });
+            });
+        }
+
         // ======= FETCH MAIN DATA (semua sekaligus, client-side pagination) =======
         async function fetchDashboardData() {
             const refreshIcon = document.getElementById('refreshIcon');
@@ -515,14 +530,29 @@
 
             // Reset OPD filter state saat refresh
             opdFilterAppNames = null;
+            detailLayananCache = null;
             const opdSel = document.getElementById('opdSelect');
             if (opdSel) { opdSel.value = ''; opdSel.disabled = true; }
 
             try {
-                const response = await fetch(`${API_URL}?page=1&limit=9999`);
-                if (!response.ok) throw new Error('Fetch failed');
-                const data = await response.json();
-                allData = data.data || [];
+                // Fetch master v5 dan layanan bersamaan
+                const [masterRes, layananRes] = await Promise.all([
+                    fetch(`${API_URL}?page=1&limit=9999`),
+                    fetch(`${DETAIL_API_URL}?page=1&limit=9999`)
+                ]);
+                if (!masterRes.ok) throw new Error('Fetch master failed');
+                if (!layananRes.ok) throw new Error('Fetch layanan failed');
+
+                const masterData  = await masterRes.json();
+                const layananData = await layananRes.json();
+
+                allData              = masterData.data  || [];
+                detailLayananCache   = layananData.data || [];
+
+                // Normalisasi field v5 lalu enrich dari layanan
+                allData.forEach(normalizeV5Item);
+                enrichAllData();
+
                 currentPage = 1;
                 populatePlatformDropdown();
                 updateStatistics(allData);
@@ -531,6 +561,9 @@
                 console.warn("Fallback ke mock data:", error);
                 setTimeout(() => {
                     allData = mockData.data || [];
+                    detailLayananCache = mockDetailData.data || [];
+                    allData.forEach(normalizeV5Item);
+                    enrichAllData();
                     currentPage = 1;
                     populatePlatformDropdown();
                     updateStatistics(allData);
@@ -540,7 +573,7 @@
                 setTimeout(() => { if (refreshIcon) refreshIcon.classList.remove('fa-spin'); }, 500);
             }
 
-            // Populate OPD dropdown secara non-blocking (pakai cache detailLayanan)
+            // Populate OPD dropdown (cache sudah terisi dari fetch di atas)
             populateOPDDropdown();
         }
 
@@ -576,6 +609,7 @@
         }
 
         // ======= FETCH DETAIL LAYANAN (cached) =======
+        // Saat dipanggil setelah fetchDashboardData, cache sudah terisi — langsung return.
         async function fetchDetailLayanan() {
             if (detailLayananCache) return detailLayananCache;
 
